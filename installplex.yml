@@ -1,0 +1,82 @@
+---
+- hosts: plex 
+  gather_facts: no
+#  vars_files:
+#    - plex_vault.yml
+#
+  tasks:
+
+#  - name: Set a hostname
+#    hostname: 
+#      name: plexserver
+
+  - name: add plex repo
+    yum_repository:
+      name: plex
+      description: plex
+      baseurl: https://downloads.plex.tv/repo/rpm/$basearch/
+      gpgkey: https://downloads.plex.tv/plex-keys/PlexSign.key
+      enabled: yes
+
+  - name: configure Firewall for Plex
+    firewalld:
+      zone: public 
+      service: plex 
+      permanent: yes
+      state: enabled
+  
+  - name: reload service firewalld
+    systemd: 
+      name: firewalld
+      state: reloaded
+
+#  - name: make pub dir
+#    file:
+#      path: /mnt/pub
+#      owner: foouser 
+#      group: foouser 
+#      state: directory
+#      mode: 0755
+
+#  - name: Mount Video share for Plex
+#    mount:
+#     state: "mounted"
+#     fstype: "cifs"
+#     name: /mnt/pub
+#     src: "//fooserver/pub/media"
+#     opts: "username=plex,password={{ plex_pwd_cfs }},uid=nobody,iocharset=utf8,nofail,vers=2.0"
+
+
+#  - name:
+#    community.general.nmcli:
+#      conn_name: eth0
+#      ifname: eth0
+#      type: ethernet
+#      ip4: 192.168.1.40/24
+#      gw4: 192.1.168.1
+#      dns4:
+#      - 8.8.8.8
+#      autoconnect: yes
+#      state: present
+
+      #  - name: update the system
+      #    yum: 
+      #      name: "*"
+      #      state: latest
+
+
+  - name: Install Plexmediaserver
+    package:
+      name: plexmediaserver
+      state: latest
+
+  - name: Check if a reboot is required
+    shell: needs-restarting -r
+    failed_when: false
+    changed_when: false
+    register: reboot_required
+
+  - name: Reboot if required
+    reboot:
+      reboot_timeout: 300
+    when: reboot_required == 1

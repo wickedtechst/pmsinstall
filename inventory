@@ -1,4 +1,2 @@
-#ansible_python_interpreter=/usr/bin/python
-
 [plex]
 192.168.1.171
